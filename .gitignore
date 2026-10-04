@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+
+storage/
+
+ai/cropped_faces/
+ai/event_photos/
+ai/test_same_person/
+ai/*.jpg
+ai/*.pkl

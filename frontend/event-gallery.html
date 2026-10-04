@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SmartEventAI - Event Gallery</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f5f7fb;
+    color: #172033;
+}
+
+.header {
+    background: white;
+    padding: 20px 35px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: bold;
+}
+
+.logo span {
+    color: #6c63ff;
+}
+
+.back {
+    color: #6c63ff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.container {
+    max-width: 1250px;
+    margin: auto;
+    padding: 30px;
+}
+
+.event-info {
+    margin-bottom: 25px;
+}
+
+.event-info h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.event-info p {
+    color: #7b8497;
+}
+
+.stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stat {
+    background: white;
+    padding: 15px 22px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.stat strong {
+    font-size: 20px;
+}
+
+.stat span {
+    color: #7b8497;
+    font-size: 13px;
+    margin-left: 5px;
+}
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.photo {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.photo:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.photo img {
+    width: 100%;
+    height: 210px;
+    object-fit: cover;
+    display: block;
+}
+
+.photo-info {
+    padding: 12px;
+    font-size: 13px;
+    color: #697386;
+}
+
+.empty {
+    text-align: center;
+    padding: 70px;
+    color: #888;
+    grid-column: 1 / -1;
+}
+
+/* FULLSCREEN */
+
+.viewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.viewer img {
+    max-width: 90%;
+    max-height: 85vh;
+    object-fit: contain;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 35px;
+    cursor: pointer;
+}
+
+.download {
+    position: absolute;
+    bottom: 25px;
+    background: #6c63ff;
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 900px) {
+    .gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    .gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .photo img {
+        height: 150px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div class="logo">
+        Smart<span>EventAI</span>
+    </div>
+
+    <a
+        href="http://127.0.0.1:8000/gallery/admin.html"
+        class="back">
+        ← Dashboard
+    </a>
+
+</header>
+
+
+<div class="container">
+
+    <div class="event-info">
+
+        <h1 id="eventName">
+            Loading Event...
+        </h1>
+
+        <p id="eventCode">
+            Please wait...
+        </p>
+
+        <div class="stats">
+
+            <div class="stat">
+                📸
+                <strong id="photoCount">0</strong>
+                <span>Photos</span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="gallery"
+        id="gallery">
+
+        <div class="empty">
+            Loading photos...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- IMAGE VIEWER -->
+
+<div
+    class="viewer"
+    id="viewer">
+
+    <span
+        class="close"
+        onclick="closeViewer()">
+        ×
+    </span>
+
+    <img
+        id="viewerImage"
+        src="">
+
+    <a
+        id="downloadBtn"
+        class="download"
+        download>
+        Download Photo
+    </a>
+
+</div>
+
+
+<script>
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+
+const EVENT_CODE =
+    params.get("event");
+
+
+/* LOAD GALLERY */
+
+async function loadGallery() {
+
+    const gallery =
+        document.getElementById("gallery");
+
+    if (!EVENT_CODE) {
+
+        gallery.innerHTML = `
+            <div class="empty">
+                No event selected.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/admin/events/${encodeURIComponent(EVENT_CODE)}/photos`
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Unable to load event."
+            );
+
+        }
+
+
+        document.getElementById("eventName")
+            .innerText =
+            data.event_name;
+
+
+        document.getElementById("eventCode")
+            .innerText =
+            `Event Code: ${data.event_code}`;
+
+
+        document.getElementById("photoCount")
+            .innerText =
+            data.total_photos;
+
+
+        gallery.innerHTML = "";
+
+
+        if (data.photos.length === 0) {
+
+            gallery.innerHTML = `
+                <div class="empty">
+                    No photos uploaded for this event.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        data.photos.forEach(photo => {
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "photo";
+
+
+            const imageUrl =
+                `${API_URL}${photo.photo_url}`;
+
+
+            card.innerHTML = `
+
+                <img
+                    src="${imageUrl}"
+                    alt="${photo.filename}"
+                    loading="lazy"
+                    onclick="openViewer('${imageUrl}')">
+
+                <div class="photo-info">
+                    ${photo.filename}
+                </div>
+
+            `;
+
+
+            gallery.appendChild(card);
+
+        });
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        gallery.innerHTML = `
+            <div class="empty">
+                ❌ ${error.message}
+            </div>
+        `;
+
+    }
+
+}
+
+
+/* VIEWER */
+
+function openViewer(imageUrl) {
+
+    document.getElementById("viewerImage")
+        .src = imageUrl;
+
+
+    document.getElementById("downloadBtn")
+        .href = imageUrl;
+
+
+    document.getElementById("viewer")
+        .style.display = "flex";
+
+}
+
+
+function closeViewer() {
+
+    document.getElementById("viewer")
+        .style.display = "none";
+
+}
+
+
+/* START */
+
+loadGallery();
+
+</script>
+
+</body>
+</html>

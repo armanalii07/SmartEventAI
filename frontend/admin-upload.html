@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SmartEventAI - Upload Photos</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f5f7fb;
+    color: #172033;
+}
+
+.container {
+    max-width: 1050px;
+    margin: auto;
+    padding: 35px 25px;
+}
+
+/* HEADER */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.logo span {
+    color: #6c63ff;
+}
+
+.back {
+    text-decoration: none;
+    color: #6c63ff;
+    font-weight: 600;
+}
+
+/* CARD */
+
+.card {
+    background: white;
+    border: 1px solid #e6e8ef;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+}
+
+h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #7b8497;
+    margin-bottom: 30px;
+}
+
+/* EVENT */
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #dfe2e8;
+    border-radius: 10px;
+    font-size: 15px;
+    background: white;
+    margin-bottom: 25px;
+}
+
+/* DROPZONE */
+
+.dropzone {
+    border: 2px dashed #bfc4d4;
+    border-radius: 16px;
+    padding: 55px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #fafbff;
+}
+
+.dropzone:hover {
+    border-color: #6c63ff;
+    background: #f7f6ff;
+}
+
+.upload-icon {
+    font-size: 45px;
+    margin-bottom: 15px;
+}
+
+.dropzone h3 {
+    margin-bottom: 8px;
+}
+
+.dropzone p {
+    color: #8991a2;
+    font-size: 14px;
+}
+
+#fileInput {
+    display: none;
+}
+
+/* FILE LIST */
+
+.file-list {
+    margin-top: 20px;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f7f8fb;
+    padding: 12px 15px;
+    border-radius: 9px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.remove {
+    color: #e5484d;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* BUTTON */
+
+.upload-btn {
+    width: 100%;
+    border: none;
+    background: #6c63ff;
+    color: white;
+    padding: 15px;
+    border-radius: 11px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 25px;
+}
+
+.upload-btn:hover {
+    background: #574fe8;
+}
+
+.upload-btn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+/* STATUS */
+
+.status {
+    display: none;
+    margin-top: 25px;
+    padding: 18px;
+    border-radius: 12px;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.status.error {
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.results {
+    margin-top: 12px;
+    line-height: 1.8;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 600px) {
+
+    .container {
+        padding: 20px 15px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <div class="logo">
+            Smart<span>EventAI</span>
+        </div>
+
+        <a
+            class="back"
+            href="http://127.0.0.1:8000/gallery/admin.html">
+            ← Dashboard
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <h1>Upload Event Photos</h1>
+
+        <p class="subtitle">
+            Upload event photos and let SmartEventAI automatically detect
+            and process faces.
+        </p>
+
+
+        <!-- EVENT -->
+
+        <label>Select Event</label>
+
+        <select id="eventSelect">
+
+            <option value="">
+                Loading events...
+            </option>
+
+        </select>
+
+
+        <!-- DROPZONE -->
+
+        <div
+            class="dropzone"
+            id="dropzone"
+            onclick="document.getElementById('fileInput').click()">
+
+            <div class="upload-icon">
+                📸
+            </div>
+
+            <h3>
+                Click to select photos
+            </h3>
+
+            <p>
+                You can select multiple JPG, JPEG or PNG images
+            </p>
+
+            <input
+                type="file"
+                id="fileInput"
+                accept="image/jpeg,image/png,image/jpg"
+                multiple>
+
+        </div>
+
+
+        <!-- FILE LIST -->
+
+        <div
+            class="file-list"
+            id="fileList">
+        </div>
+
+
+        <!-- UPLOAD -->
+
+        <button
+            class="upload-btn"
+            id="uploadBtn"
+            onclick="uploadPhotos()"
+            disabled>
+
+            Upload & Process Photos
+
+        </button>
+
+
+        <!-- STATUS -->
+
+        <div
+            class="status"
+            id="status">
+
+            <strong id="statusTitle"></strong>
+
+            <div
+                class="results"
+                id="results">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+let selectedFiles = [];
+
+
+/* LOAD EVENTS */
+
+async function loadEvents() {
+
+    const select =
+        document.getElementById("eventSelect");
+
+    try {
+
+        const response =
+            await fetch(`${API_URL}/events`);
+
+        const data =
+            await response.json();
+
+        select.innerHTML =
+            `<option value="">Select an event</option>`;
+
+        data.events.forEach(event => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = event.event_code;
+
+            option.textContent =
+                `${event.event_name} — ${event.event_code}`;
+
+            select.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        select.innerHTML =
+            `<option value="">Unable to load events</option>`;
+
+        console.error(error);
+
+    }
+
+}
+
+
+/* FILE SELECT */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", function () {
+
+        addFiles(this.files);
+
+    });
+
+
+function addFiles(files) {
+
+    for (const file of files) {
+
+        if (
+            file.type === "image/jpeg" ||
+            file.type === "image/png"
+        ) {
+
+            selectedFiles.push(file);
+
+        }
+
+    }
+
+    renderFiles();
+
+}
+
+
+/* SHOW FILES */
+
+function renderFiles() {
+
+    const list =
+        document.getElementById("fileList");
+
+    list.innerHTML = "";
+
+    selectedFiles.forEach((file, index) => {
+
+        const item =
+            document.createElement("div");
+
+        item.className = "file-item";
+
+        item.innerHTML = `
+
+            <span>
+                📷 ${file.name}
+            </span>
+
+            <span
+                class="remove"
+                onclick="removeFile(${index})">
+                ✕
+            </span>
+
+        `;
+
+        list.appendChild(item);
+
+    });
+
+
+    document.getElementById("uploadBtn")
+        .disabled =
+        selectedFiles.length === 0;
+
+}
+
+
+/* REMOVE FILE */
+
+function removeFile(index) {
+
+    selectedFiles.splice(index, 1);
+
+    renderFiles();
+
+}
+
+
+/* UPLOAD */
+
+async function uploadPhotos() {
+
+    const eventCode =
+        document.getElementById("eventSelect").value;
+
+    if (!eventCode) {
+
+        alert("Please select an event.");
+
+        return;
+
+    }
+
+    if (selectedFiles.length === 0) {
+
+        alert("Please select photos.");
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById("uploadBtn");
+
+    const status =
+        document.getElementById("status");
+
+    const title =
+        document.getElementById("statusTitle");
+
+    const results =
+        document.getElementById("results");
+
+
+    button.disabled = true;
+
+    button.innerText =
+        "⏳ Processing Photos...";
+
+
+    status.style.display =
+        "block";
+
+    status.className =
+        "status";
+
+    title.innerText =
+        "AI is processing your photos...";
+
+    results.innerText =
+        "Please wait. Face detection and embedding generation are running.";
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+
+        selectedFiles.forEach(file => {
+
+            formData.append("files", file);
+
+        });
+
+
+        const response =
+            await fetch(
+                `${API_URL}/events/${encodeURIComponent(eventCode)}/photos/bulk`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Upload failed."
+            );
+
+        }
+
+
+        let totalFaces = 0;
+
+        data.photos.forEach(photo => {
+
+            totalFaces += photo.faces_detected;
+
+        });
+
+
+        title.innerText =
+            "✓ Upload Successful";
+
+
+        results.innerHTML = `
+
+            <strong>
+                ${data.total_photos}
+            </strong>
+            photos uploaded successfully.<br>
+
+            <strong>
+                ${totalFaces}
+            </strong>
+            faces detected and processed.<br>
+
+            Event:
+            <strong>
+                ${data.event_code}
+            </strong>
+
+        `;
+
+
+        selectedFiles = [];
+
+        renderFiles();
+
+
+    } catch (error) {
+
+        status.className =
+            "status error";
+
+        title.innerText =
+            "✕ Upload Failed";
+
+        results.innerText =
+            error.message;
+
+    }
+
+
+    button.disabled =
+        selectedFiles.length === 0;
+
+    button.innerText =
+        "Upload & Process Photos";
+
+}
+
+
+/* START */
+
+loadEvents();
+
+</script>
+
+</body>
+</html>

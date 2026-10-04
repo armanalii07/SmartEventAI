@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartEventAI - Find Your Photos</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e3a8a);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 18px;
+            margin-bottom: 35px;
+        }
+
+        .events {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 18px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.16);
+        }
+
+        .event-icon {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .event-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .event-code {
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            padding: 13px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .loading {
+            color: #cbd5e1;
+            font-size: 18px;
+        }
+
+        .error {
+            background: rgba(239,68,68,0.2);
+            border: 1px solid rgba(239,68,68,0.4);
+            padding: 15px;
+            border-radius: 10px;
+            color: #fecaca;
+        }
+
+        .empty {
+            color: #cbd5e1;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">
+        📸 SmartEventAI
+    </div>
+
+    <div class="subtitle">
+        Select your event and find all your photos using AI
+    </div>
+
+    <div id="events" class="events">
+        <div class="loading">
+            Loading events...
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+
+async function loadEvents() {
+
+    const container = document.getElementById("events");
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/events`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail || "Unable to load events"
+            );
+        }
+
+        const events = data.events || [];
+
+        if (events.length === 0) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    No events available.
+                </div>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = "";
+
+        events.forEach(event => {
+
+            const card = document.createElement("div");
+
+            card.className = "event-card";
+
+            card.innerHTML = `
+
+                <div class="event-icon">
+                    📸
+                </div>
+
+                <div class="event-name">
+                    ${escapeHtml(event.event_name)}
+                </div>
+
+                <div class="event-code">
+                    Event Code: ${escapeHtml(event.event_code)}
+                </div>
+
+                <button
+                    onclick="selectEvent('${encodeURIComponent(event.event_code)}')">
+                    Find My Photos
+                </button>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+            <div class="error">
+                Unable to load events.
+                Please try again.
+            </div>
+        `;
+    }
+}
+
+
+function selectEvent(eventCode) {
+
+    const code = decodeURIComponent(eventCode);
+
+    window.location.href =
+        `/gallery/event.html?event=${encodeURIComponent(code)}`;
+}
+
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+loadEvents();
+
+</script>
+
+</body>
+</html>

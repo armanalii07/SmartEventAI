@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Login | Smart Event AI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                radial-gradient(circle at top left, #243b55, transparent 40%),
+                radial-gradient(circle at bottom right, #141e30, transparent 45%),
+                #0b1220;
+
+            color: white;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 430px;
+            padding: 20px;
+        }
+
+        .login-card {
+            padding: 40px 35px;
+
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+
+            border-radius: 24px;
+
+            backdrop-filter: blur(18px);
+
+            box-shadow:
+                0 25px 60px rgba(0,0,0,0.45);
+        }
+
+        .logo {
+            width: 65px;
+            height: 65px;
+
+            margin: 0 auto 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 18px;
+
+            background: white;
+            color: #111;
+
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #b8c1d1;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+
+            font-size: 14px;
+            color: #dce3ef;
+        }
+
+        input {
+            width: 100%;
+
+            padding: 14px 15px;
+
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+
+            background: rgba(0,0,0,0.25);
+
+            color: white;
+            font-size: 15px;
+
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #ffffff;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 60px;
+        }
+
+        .show-password {
+            position: absolute;
+
+            right: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+            background: transparent;
+
+            color: #b8c1d1;
+
+            cursor: pointer;
+        }
+
+        .login-btn {
+            width: 100%;
+
+            padding: 14px;
+
+            margin-top: 8px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: white;
+            color: #111;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #message {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+
+            color: #8994a7;
+            font-size: 12px;
+        }
+
+        @media (max-width: 500px) {
+
+            .login-card {
+                padding: 30px 22px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <div class="logo">
+            SE
+        </div>
+
+        <h1>Admin Login</h1>
+
+        <p class="subtitle">
+            Smart Event AI Management
+        </p>
+
+
+        <div class="input-group">
+
+            <label>Username</label>
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Enter username"
+                autocomplete="username"
+            >
+
+        </div>
+
+
+        <div class="input-group">
+
+            <label>Password</label>
+
+            <div class="password-wrapper">
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                >
+
+                <button
+                    type="button"
+                    class="show-password"
+                    onclick="togglePassword()"
+                >
+                    Show
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="login-btn"
+            id="loginBtn"
+            onclick="login()"
+        >
+            Sign In
+        </button>
+
+
+        <div id="message"></div>
+
+
+        <div class="footer">
+            Smart Event AI • Admin Portal
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const API_URL = "http://127.0.0.1:8000";
+
+
+function togglePassword() {
+
+    const password =
+        document.getElementById("password");
+
+    const button =
+        document.querySelector(".show-password");
+
+
+    if (password.type === "password") {
+
+        password.type = "text";
+        button.textContent = "Hide";
+
+    } else {
+
+        password.type = "password";
+        button.textContent = "Show";
+
+    }
+
+}
+
+
+async function login() {
+
+    const username =
+        document.getElementById("username")
+        .value
+        .trim();
+
+    const password =
+        document.getElementById("password")
+        .value;
+
+    const message =
+        document.getElementById("message");
+
+    const button =
+        document.getElementById("loginBtn");
+
+
+    if (!username || !password) {
+
+        message.textContent =
+            "Please enter username and password.";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Signing in...";
+
+    message.textContent = "";
+
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/admin/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+            {
+                method: "POST"
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            message.textContent =
+                data.detail ||
+                "Invalid username or password.";
+
+            button.disabled = false;
+
+            button.textContent =
+                "Sign In";
+
+            return;
+        }
+
+
+        // ==============================
+        // SAVE JWT TOKEN
+        // ==============================
+
+        sessionStorage.setItem(
+            "adminToken",
+            data.access_token
+        );
+
+        sessionStorage.setItem(
+            "adminUsername",
+            data.username
+        );
+
+
+        message.textContent =
+            "Login successful. Opening dashboard...";
+
+
+        setTimeout(() => {
+
+            window.location.href =
+                "http://127.0.0.1:8000/gallery/admin.html";
+
+        }, 700);
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Cannot connect to server.";
+
+        button.disabled = false;
+
+        button.textContent =
+            "Sign In";
+    }
+
+}
+
+</script>
+
+</body>
+</html>

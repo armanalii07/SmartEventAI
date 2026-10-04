@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Smart Event AI - Personal Gallery</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.gallery {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 25px;
+
+    max-width: 1200px;
+
+    margin: 30px auto;
+}
+
+.card {
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 15px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,0.1);
+
+}
+
+.card img {
+
+    width: 100%;
+
+    border-radius: 8px;
+
+}
+
+.filename {
+
+    margin-top: 10px;
+
+    font-weight: bold;
+
+}
+
+.score {
+
+    margin-top: 5px;
+
+    color: #555;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+    📸 Your Event Photos
+</h1>
+
+<div class="gallery">
+
+    <div class="card">
+
+        <img
+            src="event_photos\arman_4.jpg"
+            alt="arman_4.jpg"
+        >
+
+        <div class="filename">
+            arman_4.jpg
+        </div>
+
+        <div class="score">
+            Similarity: 0.7232
+        </div>
+
+    </div>
+    
+    <div class="card">
+
+        <img
+            src="event_photos\arman_3.jpg"
+            alt="arman_3.jpg"
+        >
+
+        <div class="filename">
+            arman_3.jpg
+        </div>
+
+        <div class="score">
+            Similarity: 0.6738
+        </div>
+
+    </div>
+    
+    <div class="card">
+
+        <img
+            src="event_photos\arman_2.jpg"
+            alt="arman_2.jpg"
+        >
+
+        <div class="filename">
+            arman_2.jpg
+        </div>
+
+        <div class="score">
+            Similarity: 0.6715
+        </div>
+
+    </div>
+    
+</div>
+
+</body>
+
+</html>
