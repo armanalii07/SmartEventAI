@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+psycopg[binary]
+numpy
+opencv-python
+insightface
+onnxruntime
+passlib[bcrypt]
