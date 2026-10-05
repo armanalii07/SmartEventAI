@@ -7,7 +7,7 @@ import ast
 import numpy as np
 import uuid
 
-from backend.database import SessionLocal
+from backend.database import SessionLocal, Base, engine
 from backend.models import Event, Photo, Face, Admin
 from ai.face_embedding import get_face_embeddings
 
@@ -36,6 +36,8 @@ app = FastAPI(
     description="AI-Based Smart Event Photo Management System",
     version="1.0.0"
 )
+
+Base.metadata.create_all(bind=engine)
 
 
 # =========================================================
