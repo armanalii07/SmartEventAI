@@ -237,8 +237,7 @@ if (selectedEvent) {
     document.getElementById("eventCode").value = selectedEvent;
 }
 
-const API_URL =
-    "http://127.0.0.1:8000";
+const API_URL = "https://smarteventai-production.up.railway.app";
 
 
 const selfieInput =
@@ -391,7 +390,7 @@ async function findPhotos(){
 
 
         window.location.href =
-    "http://127.0.0.1:8000/gallery/gallery.html?event=" +
+    "gallery.html?event=" +
     encodeURIComponent(eventCode);
 
 
