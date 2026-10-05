@@ -132,6 +132,14 @@ def home():
         "status": "success"
     }
 
+@app.get("/debug/photos")
+def debug_photos():
+
+    return {
+        "upload_dir": UPLOAD_DIR,
+        "files": os.listdir(UPLOAD_DIR)
+    }
+
 
 # =========================================================
 # CREATE EVENT
