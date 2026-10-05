@@ -219,9 +219,14 @@ select {
             Smart<span>EventAI</span>
         </div>
 
-        <a
+        <!-- <a
             class="back"
             href="http://127.0.0.1:8000/gallery/admin.html">
+            ← Dashboard
+        </a> -->
+        <a
+            class="back"
+            href="admin.html">
             ← Dashboard
         </a>
 
@@ -322,7 +327,7 @@ select {
 
 <script>
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://smarteventai-production.up.railway.app/events/${eventCode}/photos/bulk";
 
 let selectedFiles = [];
 
