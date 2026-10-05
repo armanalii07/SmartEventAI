@@ -701,3 +701,94 @@ def get_event_photos(
             for photo in photos
         ]
     }
+
+@app.post("/events/{event_code}/search")
+async def search_photos(
+    event_code: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    event = db.query(Event).filter(
+        Event.event_code == event_code.upper()
+    ).first()
+
+    if not event:
+        raise HTTPException(
+            status_code=404,
+            detail="Event not found"
+        )
+
+    # Save selfie
+    unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+    selfie_path = os.path.join(SEARCH_DIR, unique_filename)
+
+    contents = await file.read()
+
+    with open(selfie_path, "wb") as f:
+        f.write(contents)
+
+    # Get selfie embedding
+    selfie_embeddings = get_face_embeddings(selfie_path)
+
+    if not selfie_embeddings:
+        raise HTTPException(
+            status_code=400,
+            detail="No face detected in selfie."
+        )
+
+    selfie_embedding = np.array(
+        selfie_embeddings[0]
+    )
+
+    # Get event photos
+    photos = db.query(Photo).filter(
+        Photo.event_id == event.id
+    ).all()
+
+    matches = []
+
+    for photo in photos:
+
+        faces = db.query(Face).filter(
+            Face.photo_id == photo.id
+        ).all()
+
+        best_score = 0
+
+        for face in faces:
+            if not face.embedding:
+                continue
+
+            stored_embedding = np.array(
+                ast.literal_eval(face.embedding)
+            )
+
+            score = np.dot(
+                selfie_embedding,
+                stored_embedding
+            ) / (
+                np.linalg.norm(selfie_embedding) *
+                np.linalg.norm(stored_embedding)
+            )
+
+            best_score = max(best_score, float(score))
+
+        if best_score >= 0.60:
+            matches.append({
+                "photo_id": photo.id,
+                "filename": photo.filename,
+                "photo_url": f"/photos/{photo.filename}",
+                "similarity": round(best_score, 4)
+            })
+
+    matches.sort(
+        key=lambda x: x["similarity"],
+        reverse=True
+    )
+
+    return {
+        "event_name": event.event_name,
+        "event_code": event.event_code,
+        "total_matches": len(matches),
+        "photos": matches
+    }
