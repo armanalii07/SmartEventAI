@@ -39,6 +39,18 @@ app = FastAPI(
 
 
 # =========================================================
+# STORAGE
+# =========================================================
+
+UPLOAD_DIR = "storage/event_photos"
+SEARCH_DIR = "storage/search"
+
+# Create storage directories BEFORE mounting StaticFiles
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(SEARCH_DIR, exist_ok=True)
+
+
+# =========================================================
 # STATIC FILES
 # =========================================================
 
@@ -50,7 +62,7 @@ app.mount(
 
 app.mount(
     "/photos",
-    StaticFiles(directory="storage/event_photos"),
+    StaticFiles(directory=UPLOAD_DIR),
     name="photos"
 )
 
@@ -66,15 +78,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# =========================================================
-# STORAGE
-# =========================================================
-
-UPLOAD_DIR = "storage/event_photos"
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # =========================================================
@@ -336,12 +339,7 @@ async def search_photos(
             detail="Event not found"
         )
 
-    search_dir = "storage/search"
-
-    os.makedirs(
-        search_dir,
-        exist_ok=True
-    )
+    search_dir = SEARCH_DIR
 
     selfie_filename = (
         f"{uuid.uuid4().hex}_{file.filename}"
