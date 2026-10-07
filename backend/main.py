@@ -15,6 +15,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from passlib.context import CryptContext
+import cloudinary
+import cloudinary.uploader
 
 
 # =========================================================
@@ -35,6 +37,12 @@ app = FastAPI(
     title="Smart Event AI",
     description="AI-Based Smart Event Photo Management System",
     version="1.0.0"
+)
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
 Base.metadata.create_all(bind=engine)
@@ -118,6 +126,16 @@ def cosine_similarity(a, b):
         np.linalg.norm(a) *
         np.linalg.norm(b)
     )
+
+def upload_to_cloudinary(file_path, public_id):
+    result = cloudinary.uploader.upload(
+        file_path,
+        folder="smart_event_ai",
+        public_id=public_id,
+        resource_type="image"
+    )
+
+    return result["secure_url"]
 
 
 # =========================================================
@@ -261,13 +279,11 @@ async def upload_photo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-
     event = db.query(Event).filter(
         Event.event_code == event_code.upper()
     ).first()
 
     if not event:
-
         raise HTTPException(
             status_code=404,
             detail="Event not found"
@@ -287,44 +303,70 @@ async def upload_photo(
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    new_photo = Photo(
-        event_id=event.id,
-        filename=unique_filename
-    )
+    try:
+        # Upload image to Cloudinary
+        public_id = os.path.splitext(unique_filename)[0]
 
-    db.add(new_photo)
-    db.commit()
-    db.refresh(new_photo)
-
-    embeddings = get_face_embeddings(
-        file_path
-    )
-
-    for index, embedding in enumerate(
-        embeddings,
-        start=1
-    ):
-
-        new_face = Face(
-            photo_id=new_photo.id,
-            face_number=index,
-            embedding=str(embedding)
+        photo_url = upload_to_cloudinary(
+            file_path,
+            public_id
         )
 
-        db.add(new_face)
+        # AI face embedding
+        embeddings = get_face_embeddings(
+            file_path
+        )
 
-    db.commit()
+        # Save photo information
+        new_photo = Photo(
+            event_id=event.id,
+            filename=unique_filename,
+            photo_url=photo_url
+        )
 
-    return {
-        "message": "Photo uploaded and processed successfully",
+        db.add(new_photo)
+        db.commit()
+        db.refresh(new_photo)
 
-        "photo": {
-            "id": new_photo.id,
-            "event_id": new_photo.event_id,
-            "filename": new_photo.filename,
-            "faces_detected": len(embeddings)
+        # Save face embeddings
+        for index, embedding in enumerate(
+            embeddings,
+            start=1
+        ):
+            new_face = Face(
+                photo_id=new_photo.id,
+                face_number=index,
+                embedding=str(embedding)
+            )
+
+            db.add(new_face)
+
+        db.commit()
+
+        return {
+            "message": "Photo uploaded and processed successfully",
+
+            "photo": {
+                "id": new_photo.id,
+                "event_id": new_photo.event_id,
+                "filename": new_photo.filename,
+                "photo_url": new_photo.photo_url,
+                "faces_detected": len(embeddings)
+            }
         }
-    }
+
+    except Exception as e:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Photo processing failed: {str(e)}"
+        )
+
+    finally:
+        # Remove temporary Railway/local file
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 
 # =========================================================
@@ -423,8 +465,7 @@ async def search_photos(
                     4
                 ),
 
-                "photo_url":
-                    f"/photos/{photo.filename}"
+                "photo_url": photo.photo_url
             })
 
     matches.sort(
@@ -452,13 +493,11 @@ async def upload_bulk_photos(
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
-
     event = db.query(Event).filter(
         Event.event_code == event_code.upper()
     ).first()
 
     if not event:
-
         raise HTTPException(
             status_code=404,
             detail="Event not found"
@@ -477,62 +516,86 @@ async def upload_bulk_photos(
             unique_filename
         )
 
-        contents = await file.read()
+        try:
+            contents = await file.read()
 
-        with open(
-            file_path,
-            "wb"
-        ) as f:
+            with open(file_path, "wb") as f:
+                f.write(contents)
 
-            f.write(contents)
+            # Upload to Cloudinary
+            public_id = os.path.splitext(
+                unique_filename
+            )[0]
 
-        new_photo = Photo(
-            event_id=event.id,
-            filename=unique_filename
-        )
-
-        db.add(new_photo)
-        db.commit()
-        db.refresh(new_photo)
-
-        embeddings = get_face_embeddings(
-            file_path
-        )
-
-        for index, embedding in enumerate(
-            embeddings,
-            start=1
-        ):
-
-            new_face = Face(
-                photo_id=new_photo.id,
-                face_number=index,
-                embedding=str(embedding)
+            photo_url = upload_to_cloudinary(
+                file_path,
+                public_id
             )
 
-            db.add(new_face)
+            # AI face embedding
+            embeddings = get_face_embeddings(
+                file_path
+            )
 
-        db.commit()
+            # Save photo
+            new_photo = Photo(
+                event_id=event.id,
+                filename=unique_filename,
+                photo_url=photo_url
+            )
 
-        results.append({
+            db.add(new_photo)
+            db.commit()
+            db.refresh(new_photo)
 
-            "photo_id": new_photo.id,
+            # Save face embeddings
+            for index, embedding in enumerate(
+                embeddings,
+                start=1
+            ):
+                new_face = Face(
+                    photo_id=new_photo.id,
+                    face_number=index,
+                    embedding=str(embedding)
+                )
 
-            "filename": unique_filename,
+                db.add(new_face)
 
-            "faces_detected": len(embeddings)
-        })
+            db.commit()
+
+            results.append({
+                "photo_id": new_photo.id,
+                "filename": unique_filename,
+                "photo_url": photo_url,
+                "faces_detected": len(embeddings)
+            })
+
+        except Exception as e:
+
+            db.rollback()
+
+            results.append({
+                "filename": file.filename,
+                "error": str(e)
+            })
+
+        finally:
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
     return {
-
         "message":
             "Bulk photos uploaded and processed successfully",
 
-        "event_code": event_code.upper(),
+        "event_code":
+            event_code.upper(),
 
-        "total_photos": len(results),
+        "total_photos":
+            len(results),
 
-        "photos": results
+        "photos":
+            results
     }
 
 
@@ -694,8 +757,7 @@ def get_event_photos(
 
                 "filename": photo.filename,
 
-                "photo_url":
-                    f"/photos/{photo.filename}"
+                "photo_url": photo.photo_url
             }
 
             for photo in photos
@@ -777,7 +839,7 @@ async def search_photos(
             matches.append({
                 "photo_id": photo.id,
                 "filename": photo.filename,
-                "photo_url": f"/photos/{photo.filename}",
+                "photo_url": photo.photo_url,
                 "similarity": round(best_score, 4)
             })
 

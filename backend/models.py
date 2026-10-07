@@ -19,6 +19,7 @@ class Photo(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     filename = Column(String, nullable=False)
+    photo_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Face(Base):
