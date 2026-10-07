@@ -374,30 +374,28 @@ async function login() {
 
 
         // ==============================
-        // SAVE JWT TOKEN
-        // ==============================
+// SAVE LOGIN INFORMATION
+// ==============================
 
-        sessionStorage.setItem(
-            "adminToken",
-            data.access_token
-        );
+sessionStorage.setItem(
+    "adminLoggedIn",
+    "true"
+);
 
-        sessionStorage.setItem(
-            "adminUsername",
-            data.username
-        );
+sessionStorage.setItem(
+    "adminUsername",
+    data.username
+);
 
+message.textContent =
+    "Login successful. Opening dashboard...";
 
-        message.textContent =
-            "Login successful. Opening dashboard...";
+setTimeout(() => {
 
+    window.location.href =
+        "admin.html";
 
-        setTimeout(() => {
-
-            window.location.href =
-                "http://127.0.0.1:8000/gallery/admin.html";
-
-        }, 700);
+}, 700);
 
 
     } catch (error) {
