@@ -481,8 +481,8 @@ td {
 
     <div class="admin">
 
-        <strong>
-            Administrator
+        <strong id="Arman Alii">
+         Administrator
         </strong>
 
         <div class="avatar">
@@ -736,10 +736,27 @@ td {
 
 <script>
 
+
+// ==============================
+// ADMIN LOGIN CHECK
+// ==============================
+
+if (sessionStorage.getItem("adminLoggedIn") !== "true") {
+    window.location.href = "admin-login.html";
+}
+
 // const API_URL =
 //     "http://127.0.0.1:8000";
 
 const API_URL = "https://smarteventai-production.up.railway.app";
+
+const adminUsername =
+    sessionStorage.getItem("adminUsername");
+
+if (adminUsername) {
+    document.getElementById("adminName").textContent =
+        adminUsername;
+}
 
 
 /* =========================
@@ -1116,9 +1133,10 @@ function scrollToEvents() {
 
 function logout() {
 
-    window.location.href =
-        "/gallery/admin-login.html";
+    sessionStorage.removeItem("adminLoggedIn");
+    sessionStorage.removeItem("adminUsername");
 
+    window.location.href = "admin-login.html";
 }
 
 
