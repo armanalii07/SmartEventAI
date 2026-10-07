@@ -14,7 +14,8 @@ from ai.face_embedding import get_face_embeddings
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from passlib.context import CryptContext
+# from passlib.context import CryptContext
+import bcrypt
 import cloudinary
 import cloudinary.uploader
 
@@ -23,10 +24,10 @@ import cloudinary.uploader
 # PASSWORD CONFIGURATION
 # =========================================================
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+# pwd_context = CryptContext(
+#     schemes=["bcrypt"],
+#     deprecated="auto"
+# )
 
 
 # =========================================================
@@ -623,10 +624,10 @@ def admin_login(
             detail="Invalid username or password"
         )
 
-    if not pwd_context.verify(
-        password,
-        admin.password_hash
-    ):
+    if not bcrypt.checkpw(
+    password.encode("utf-8"),
+    admin.password_hash.encode("utf-8")
+):
 
         raise HTTPException(
             status_code=401,
